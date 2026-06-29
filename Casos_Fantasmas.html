@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ingreso de equipos pendientes de WO</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card-bg: #ffffff;
+      --text-primary: #1a1d21;
+      --text-secondary: #5f6368;
+      --border: #d9dce1;
+      --border-strong: #b8bcc4;
+      --accent: #3578e5;
+      --accent-dark: #2659b8;
+      --success: #1d9e75;
+      --success-bg: #e1f5ee;
+      --error: #d85a30;
+      --error-bg: #faece7;
+      --radius: 10px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #15171a;
+      --card-bg: #1e2126;
+      --text-primary: #f1f2f4;
+      --text-secondary: #a0a4ab;
+      --border: #33373e;
+      --border-strong: #454a52;
+      --accent: #5b9bf5;
+      --accent-dark: #4886e0;
+      --success: #5dcaa5;
+      --success-bg: #0c2c24;
+      --error: #f0997b;
+      --error-bg: #3a1d12;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 24px 16px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .wrap { max-width: 560px; margin: 0 auto; }
+    .wrap.wide { max-width: 860px; }
+    .wrap.extra-wide { max-width: none; width: 100%; margin: 0; }
+
+    .form-layout {
+      --form-col-width: 420px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .form-column {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .resizer {
+      display: none;
+    }
+
+    @media (min-width: 860px) {
+      .form-layout {
+        grid-template-columns: var(--form-col-width) 20px 1fr;
+        gap: 0;
+      }
+
+      .resizer {
+        display: flex;
+        align-self: stretch;
+        justify-content: center;
+        width: 20px;
+        cursor: col-resize;
+        position: relative;
+        background: transparent;
+      }
+
+      .resizer::after {
+        content: '';
+        width: 2px;
+        border-radius: 2px;
+        background: var(--border);
+        align-self: stretch;
+      }
+
+      .resizer:hover::after,
+      .resizer.dragging::after {
+        background: var(--accent);
+      }
+
+      .form-layout.resizing {
+        user-select: none;
+      }
+    }
+
+    .registros-panel {
+      min-width: 0;
+    }
+
+    .registros-panel .card {
+      padding: 16px 16px 20px;
+    }
+
+    .registros-panel h2 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 4px;
+      color: var(--text-primary);
+    }
+
+    .registros-panel .panel-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 0 0 14px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      gap: 12px;
+    }
+
+    .header h1 {
+      font-size: 19px;
+      font-weight: 600;
+      margin: 0 0 4px;
+      line-height: 1.3;
+      letter-spacing: 0.01em;
+    }
+
+    .header p { font-size: 13px; color: var(--text-secondary); margin: 0; }
+
+    .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .correlativo-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg);
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 18px;
+    }
+
+    .correlativo-box .label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .correlativo-box .value {
+      font-size: 20px;
+      font-weight: 600;
+      font-family: 'SF Mono', Consolas, monospace;
+      color: var(--accent);
+    }
+
+    .correlativo-box .value.pending {
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 400;
+      font-family: inherit;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0 0 6px;
+      color: var(--text-primary);
+    }
+
+    .field { margin-bottom: 16px; }
+    .required-mark { color: var(--error); margin-left: 2px; }
+
+    input[type="date"],
+    input[type="password"],
+    select,
+    textarea,
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 70px; }
+    .hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 4px; }
+    button { font-family: inherit; }
+
+    .btn-primary {
+      flex: 1;
+      padding: 13px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 13px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover { background: var(--bg); color: var(--text-primary); }
+
+    .msg { display: none; border-radius: 8px; padding: 12px 14px; font-size: 13px; margin-bottom: 16px; }
+    .msg.success { display: block; background: var(--success-bg); color: var(--success); }
+    .msg.error { display: block; background: var(--error-bg); color: var(--error); }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 6px;
+      vertical-align: -2px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .footer-link { text-align: center; margin-top: 18px; }
+    .footer-link a {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--border-strong);
+      cursor: pointer;
+    }
+    .footer-link a:hover { color: var(--text-primary); }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .tabs { display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      padding: 10px 14px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    th { color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .table-scroll { overflow-x: auto; margin-bottom: 8px; }
+
+    .catalog-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .catalog-row span { flex: 1; font-size: 14px; }
+    .catalog-row input[type="text"] { flex: 1; padding: 7px 10px; }
+
+    .icon-action {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .icon-action:hover { background: var(--bg); }
+    .icon-action.danger:hover { color: var(--error); border-color: var(--error); }
+    .icon-action.success:hover { color: var(--success); border-color: var(--success); }
+
+    .add-row { display: flex; gap: 8px; margin-top: 12px; }
+    .add-row input { flex: 1; }
+    .add-row button {
+      padding: 0 16px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .empty-state { text-align: center; color: var(--text-secondary); font-size: 13px; padding: 24px 0; }
+    .login-card { max-width: 360px; margin: 60px auto 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ===================== VISTA: FORMULARIO ===================== -->
+  <div class="view active" id="viewForm">
+    <div class="wrap extra-wide">
+      <div class="header">
+        <div>
+          <h1>INGRESO DE EQUIPOS PENDIENTES DE WO</h1>
+          <p>Por favor, ingrese los siguientes datos:</p>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" id="themeToggle" type="button" title="Cambiar tema">🌙</button>
+        </div>
+      </div>
+
+      <div class="form-layout" id="formLayout">
+        <div class="form-column" id="formColumn">
+          <div class="card">
+            <div id="msgBox" class="msg"></div>
+
+            <div class="correlativo-box">
+              <span class="label">Orden correlativo</span>
+              <span class="value pending" id="correlativoDisplay">se genera al elegir fecha</span>
+            </div>
+
+            <form id="form">
+              <div class="field">
+                <label for="fecha">Fecha de ingreso<span class="required-mark">*</span></label>
+                <input type="date" id="fecha" required>
+              </div>
+
+              <div class="field">
+                <label for="gestor">Gestor<span class="required-mark">*</span></label>
+                <select id="gestor" required>
+                  <option value="" disabled selected>Selecciona un gestor</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="motivo">Motivo<span class="required-mark">*</span></label>
+                <select id="motivo" required>
+                  <option value="" disabled selected>Selecciona un motivo</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="numeroCaso">Número de caso</label>
+                <input type="text" id="numeroCaso" placeholder="Ej: 2031484846">
+              </div>
+
+              <div class="field">
+                <label for="numeroSerie">Número de serie</label>
+                <input type="text" id="numeroSerie" placeholder="Ej: PF3A2B1C">
+                <p class="hint">Debes completar al menos uno: número de caso o número de serie.</p>
+              </div>
+
+              <div class="field">
+                <label for="observaciones">Observaciones</label>
+                <textarea id="observaciones" placeholder="Detalle adicional (opcional)"></textarea>
+              </div>
+
+              <div class="btn-row">
+                <button type="button" class="btn-secondary" id="cancelBtn">CANCELAR</button>
+                <button type="submit" class="btn-primary" id="submitBtn">REGISTRAR</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="footer-link">
+            <a id="goAdminLogin">Administrador</a>
+          </div>
+        </div>
+
+        <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Ajustar ancho entre formulario y tabla" tabindex="0"></div>
+
+        <div class="registros-panel" id="registrosPanel">
+          <div class="card">
+            <h2>REGISTROS DE INGRESOS</h2>
+            <p class="panel-sub">Solo visualización (Se actualiza al registrar un equipo)</p>
+            <div class="table-scroll">
+              <table id="tablaRegistrosPublica">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Gestor</th>
+                    <th>Motivo</th>
+                    <th>N° caso</th>
+                    <th>N° serie</th>
+                    <th>Correlativo</th>
+                    <th>Observaciones</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="registrosPublicaEmpty" style="display:none;">Aún no hay registros.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== VISTA: LOGIN ADMIN ===================== -->
+  <div class="view" id="viewAdminLogin">
+    <div class="wrap">
+      <div class="card login-card">
+        <div id="loginMsgBox" class="msg"></div>
+        <div class="field">
+          <label for="adminUser">Usuario</label>
+          <input type="text" id="adminUser" autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="adminPass">Contraseña</label>
+          <input type="password" id="adminPass" autocomplete="current-password">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn-secondary" id="loginCancelBtn">CANCELAR</button>
+          <button type="button" class="btn-primary" id="loginSubmitBtn">INGRESAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== VISTA: PANEL ADMIN ===================== -->
+  <div class="view" id="viewAdminPanel">
+    <div class="wrap wide">
+      <div class="header">
+        <div>
+          <h1>Panel de administrador</h1>
+          <p>Registros, gestores y motivos</p>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" id="logoutBtn" type="button" title="Cerrar sesión">⎋</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="adminMsgBox" class="msg"></div>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="registros">Registros</button>
+          <button class="tab-btn" data-tab="gestores">Gestores</button>
+          <button class="tab-btn" data-tab="motivos">Motivos</button>
+        </div>
+
+        <div class="tab-panel active" id="tabRegistros">
+          <div class="table-scroll">
+            <table id="tablaRegistros">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Gestor</th>
+                  <th>Motivo</th>
+                  <th>N° caso</th>
+                  <th>N° serie</th>
+                  <th>Correlativo</th>
+                  <th>Observaciones</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="registrosEmpty" style="display:none;">Aún no hay registros.</div>
+        </div>
+
+        <div class="tab-panel" id="tabGestores">
+          <div id="listaGestores"></div>
+          <div class="add-row">
+            <input type="text" id="nuevoGestor" placeholder="Nombre del nuevo gestor">
+            <button id="btnAgregarGestor">Agregar</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tabMotivos">
+          <div id="listaMotivos"></div>
+          <div class="add-row">
+            <input type="text" id="nuevoMotivo" placeholder="Nombre del nuevo motivo">
+            <button id="btnAgregarMotivo">Agregar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =====================================================================
+    // CONFIGURACIÓN: pega aquí la URL de tu Web App de Apps Script
+    // (Implementar -> Gestionar implementaciones -> copiar URL, termina
+    // en /exec). Esta página llama a esa URL por fetch().
+    // =====================================================================
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyE9EHPnsOoQgL0XEexhhtdrGUO45dMDLGDzHNHBbZwB6HgOY7gq9miSgHU_pv7-cXHBw/exec';
+
+    // ================= CLIENTE API =================
+    // Apps Script Web Apps no soportan bien cabeceras custom desde
+    // fetch con CORS simple, así que usamos GET con querystring para
+    // lecturas y POST con form-urlencoded (evita preflight OPTIONS,
+    // que Apps Script no maneja) para escritura.
+
+    function apiGet(action, paramsObj) {
+      const params = new URLSearchParams(Object.assign({ action: action, _ts: Date.now() }, paramsObj || {}));
+      return fetch(API_URL + '?' + params.toString(), { cache: 'no-store' })
+        .then(r => r.json());
+    }
+
+    function apiPost(action, paramsObj) {
+      const body = Object.assign({ action: action }, paramsObj || {});
+      return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS
+        body: JSON.stringify(body)
+      }).then(r => r.json());
+    }
+
+    // ================= ESTADO GLOBAL =================
+    let adminAuth = null; // { username, password } solo en memoria mientras dura la sesión
+
+    // ================= NAVEGACIÓN ENTRE VISTAS =================
+    function showView(id) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // ================= TEMA =================
+    const themeToggle = document.getElementById('themeToggle');
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+    let savedTheme = 'light';
+    try { savedTheme = localStorage.getItem('formTheme') || 'light'; } catch (e) {}
+    applyTheme(savedTheme);
+    themeToggle.addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem('formTheme', next); } catch (e) {}
+    });
+
+    // ================= FORMULARIO PRINCIPAL =================
+    const fechaInput = document.getElementById('fecha');
+    const correlativoDisplay = document.getElementById('correlativoDisplay');
+    const gestorSelect = document.getElementById('gestor');
+    const motivoSelect = document.getElementById('motivo');
+    const form = document.getElementById('form');
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const msgBox = document.getElementById('msgBox');
+
+    function hoyISO() {
+      const d = new Date();
+      const tz = d.getTimezoneOffset() * 60000;
+      return new Date(d - tz).toISOString().slice(0, 10);
+    }
+
+    function pedirCorrelativo() {
+      correlativoDisplay.textContent = 'calculando...';
+      correlativoDisplay.classList.add('pending');
+      apiGet('siguienteCorrelativo')
+        .then(function (resp) {
+          if (resp.ok) {
+            correlativoDisplay.textContent = resp.correlativo;
+            correlativoDisplay.classList.remove('pending');
+          } else {
+            throw new Error(resp.error || 'Error desconocido');
+          }
+        })
+        .catch(function (err) {
+          correlativoDisplay.textContent = 'error al calcular';
+          showMsg(msgBox, 'error', 'No se pudo calcular el correlativo: ' + err.message);
+        });
+    }
+
+    function resetFormDefaults() {
+      form.reset();
+      fechaInput.value = hoyISO();
+      correlativoDisplay.textContent = 'se genera al elegir fecha';
+      correlativoDisplay.classList.add('pending');
+      pedirCorrelativo();
+    }
+
+    function poblarSelect(select, opciones) {
+      select.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
+      opciones.forEach(op => {
+        const opt = document.createElement('option');
+        opt.value = op;
+        opt.textContent = op;
+        select.appendChild(opt);
+      });
+    }
+
+    function cargarListasFormulario() {
+      // fire-and-forget: no bloquea la UI mientras carga (mismo patrón
+      // que el fix de "selector se resetea" de la app de seguimiento)
+      apiGet('listasFormulario')
+        .then(function (resp) {
+          if (resp.ok) {
+            poblarSelect(gestorSelect, resp.data.gestores);
+            poblarSelect(motivoSelect, resp.data.motivos);
+          } else {
+            throw new Error(resp.error || 'Error desconocido');
+          }
+        })
+        .catch(function (err) {
+          showMsg(msgBox, 'error', 'No se pudieron cargar las listas: ' + err.message);
+        });
+    }
+
+    fechaInput.addEventListener('change', pedirCorrelativo);
+
+    function showMsg(box, type, text) {
+      box.className = 'msg ' + type;
+      box.textContent = text;
+    }
+    function hideMsg(box) {
+      box.className = 'msg';
+      box.textContent = '';
+    }
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      submitBtn.innerHTML = loading ? '<span class="spinner"></span>REGISTRANDO...' : 'REGISTRAR';
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      hideMsg(msgBox);
+
+      if (!fechaInput.value) {
+        showMsg(msgBox, 'error', 'Selecciona la fecha de ingreso.');
+        return;
+      }
+
+      const numeroCaso = document.getElementById('numeroCaso').value.trim();
+      const numeroSerie = document.getElementById('numeroSerie').value.trim();
+
+      if (!numeroCaso && !numeroSerie) {
+        showMsg(msgBox, 'error', 'Debes completar al menos el número de caso o el número de serie.');
+        return;
+      }
+
+      const datos = {
+        fecha: fechaInput.value,
+        gestor: gestorSelect.value,
+        motivo: motivoSelect.value,
+        numeroCaso: numeroCaso,
+        numeroSerie: numeroSerie,
+        observaciones: document.getElementById('observaciones').value.trim()
+      };
+
+      setLoading(true);
+
+      apiPost('registrarEquipo', datos)
+        .then(function (resultado) {
+          setLoading(false);
+          if (resultado.ok) {
+            showMsg(msgBox, 'success', 'Registro guardado correctamente con orden correlativo ' + resultado.correlativo + '.');
+            resetFormDefaults();
+            cargarRegistrosPublicos();
+          } else {
+            showMsg(msgBox, 'error', resultado.error || 'Ocurrió un error al guardar.');
+          }
+        })
+        .catch(function (err) {
+          setLoading(false);
+          showMsg(msgBox, 'error', 'Error al guardar: ' + err.message);
+        });
+    });
+
+    cancelBtn.addEventListener('click', function () {
+      hideMsg(msgBox);
+      resetFormDefaults();
+    });
+
+    // ================= RESIZER ENTRE FORMULARIO Y TABLA =================
+    (function () {
+      const layout = document.getElementById('formLayout');
+      const resizer = document.getElementById('resizer');
+      const formColumn = document.getElementById('formColumn');
+
+      const MIN_WIDTH = 320;
+      const MAX_WIDTH = 900;
+
+      function setWidth(px) {
+        const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, px));
+        layout.style.setProperty('--form-col-width', clamped + 'px');
+        try { localStorage.setItem('formColWidth', String(clamped)); } catch (e) {}
+      }
+
+      let savedWidth = null;
+      try { savedWidth = parseInt(localStorage.getItem('formColWidth'), 10); } catch (e) {}
+      if (savedWidth && !isNaN(savedWidth)) setWidth(savedWidth);
+
+      let dragging = false;
+
+      function onPointerDown(e) {
+        dragging = true;
+        resizer.classList.add('dragging');
+        layout.classList.add('resizing');
+        e.preventDefault();
+      }
+
+      function onPointerMove(e) {
+        if (!dragging) return;
+        const layoutRect = layout.getBoundingClientRect();
+        const newWidth = e.clientX - layoutRect.left;
+        setWidth(newWidth);
+      }
+
+      function onPointerUp() {
+        if (!dragging) return;
+        dragging = false;
+        resizer.classList.remove('dragging');
+        layout.classList.remove('resizing');
+      }
+
+      resizer.addEventListener('mousedown', onPointerDown);
+      document.addEventListener('mousemove', onPointerMove);
+      document.addEventListener('mouseup', onPointerUp);
+
+      // Soporte táctil básico (tablets)
+      resizer.addEventListener('touchstart', function (e) {
+        dragging = true;
+        resizer.classList.add('dragging');
+      }, { passive: true });
+      document.addEventListener('touchmove', function (e) {
+        if (!dragging || !e.touches[0]) return;
+        const layoutRect = layout.getBoundingClientRect();
+        setWidth(e.touches[0].clientX - layoutRect.left);
+      }, { passive: true });
+      document.addEventListener('touchend', function () {
+        dragging = false;
+        resizer.classList.remove('dragging');
+      });
+
+      // Doble clic para restablecer el ancho por defecto
+      resizer.addEventListener('dblclick', function () {
+        setWidth(420);
+      });
+
+      // Atajos de teclado cuando el resizer tiene foco (accesibilidad)
+      resizer.addEventListener('keydown', function (e) {
+        const current = parseInt(getComputedStyle(layout).getPropertyValue('--form-col-width'), 10) || 420;
+        if (e.key === 'ArrowLeft') { setWidth(current - 20); e.preventDefault(); }
+        if (e.key === 'ArrowRight') { setWidth(current + 20); e.preventDefault(); }
+      });
+    })();
+
+    // Inicialización del formulario
+    cargarListasFormulario();
+    resetFormDefaults();
+    cargarRegistrosPublicos();
+
+    // ================= LOGIN ADMIN =================
+    const goAdminLogin = document.getElementById('goAdminLogin');
+    const loginCancelBtn = document.getElementById('loginCancelBtn');
+    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    const loginMsgBox = document.getElementById('loginMsgBox');
+    const adminUser = document.getElementById('adminUser');
+    const adminPass = document.getElementById('adminPass');
+
+    goAdminLogin.addEventListener('click', function () {
+      hideMsg(loginMsgBox);
+      adminUser.value = '';
+      adminPass.value = '';
+      showView('viewAdminLogin');
+    });
+
+    loginCancelBtn.addEventListener('click', function () {
+      showView('viewForm');
+    });
+
+    loginSubmitBtn.addEventListener('click', function () {
+      hideMsg(loginMsgBox);
+      const username = adminUser.value.trim();
+      const password = adminPass.value;
+
+      if (!username || !password) {
+        showMsg(loginMsgBox, 'error', 'Ingresa usuario y contraseña.');
+        return;
+      }
+
+      loginSubmitBtn.disabled = true;
+      loginSubmitBtn.innerHTML = '<span class="spinner"></span>Verificando...';
+
+      apiPost('loginAdmin', { username: username, password: password })
+        .then(function (resultado) {
+          loginSubmitBtn.disabled = false;
+          loginSubmitBtn.textContent = 'INGRESAR';
+          if (resultado.ok) {
+            adminAuth = { username: username, password: password };
+            showView('viewAdminPanel');
+            cargarRegistros();
+            cargarGestores();
+            cargarMotivos();
+          } else {
+            showMsg(loginMsgBox, 'error', resultado.error);
+          }
+        })
+        .catch(function (err) {
+          loginSubmitBtn.disabled = false;
+          loginSubmitBtn.textContent = 'INGRESAR';
+          showMsg(loginMsgBox, 'error', 'Error al iniciar sesión: ' + err.message);
+        });
+    });
+
+    // ================= PANEL ADMIN: TABS =================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab' + btn.dataset.tab.charAt(0).toUpperCase() + btn.dataset.tab.slice(1)).classList.add('active');
+      });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      adminAuth = null;
+      showView('viewForm');
+    });
+
+    const adminMsgBox = document.getElementById('adminMsgBox');
+
+    function handleAuthError(err) {
+      showMsg(adminMsgBox, 'error', err.message);
+      if (err.message && err.message.indexOf('Sesión de administrador') !== -1) {
+        adminAuth = null;
+        setTimeout(function () { showView('viewAdminLogin'); }, 1500);
+      }
+    }
+
+    // ---------- Registros: pintado de tabla (reutilizado en ambas vistas) ----------
+    function pintarTablaRegistros(tablaSelector, emptyStateId, registros) {
+      const tbody = document.querySelector(tablaSelector + ' tbody');
+      tbody.innerHTML = '';
+      document.getElementById(emptyStateId).style.display = registros.length === 0 ? 'block' : 'none';
+      registros.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' + escapeHtml(r.fecha) + '</td>' +
+          '<td>' + escapeHtml(r.gestor) + '</td>' +
+          '<td>' + escapeHtml(r.motivo) + '</td>' +
+          '<td>' + escapeHtml(r.numeroCaso || '') + '</td>' +
+          '<td>' + escapeHtml(r.numeroSerie || '') + '</td>' +
+          '<td>' + escapeHtml(String(r.correlativo)) + '</td>' +
+          '<td>' + escapeHtml(r.observaciones || '') + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : str;
+      return div.innerHTML;
+    }
+
+    // ---------- Tabla pública (formulario principal, sin login) ----------
+    function cargarRegistrosPublicos() {
+      apiGet('registrosPublicos')
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          pintarTablaRegistros('#tablaRegistrosPublica', 'registrosPublicaEmpty', resp.data);
+        })
+        .catch(function (err) {
+          showMsg(msgBox, 'error', 'No se pudo cargar la tabla de registros: ' + err.message);
+        });
+    }
+
+    // ---------- Registros (panel admin, solo lectura) ----------
+    function cargarRegistros() {
+      if (!adminAuth) return;
+      apiGet('adminRegistros', adminAuth)
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          pintarTablaRegistros('#tablaRegistros', 'registrosEmpty', resp.data);
+        })
+        .catch(handleAuthError);
+    }
+
+    // ---------- Catálogo genérico (Gestores / Motivos) ----------
+    function renderCatalogo(containerId, items, onEdit, onDelete) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      if (items.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No hay elementos registrados.';
+        container.appendChild(empty);
+        return;
+      }
+
+      items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'catalog-row';
+
+        const span = document.createElement('span');
+        span.textContent = item.nombre;
+
+        const editInput = document.createElement('input');
+        editInput.type = 'text';
+        editInput.value = item.nombre;
+        editInput.style.display = 'none';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'icon-action';
+        editBtn.title = 'Editar';
+        editBtn.textContent = '✎';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'icon-action success';
+        saveBtn.title = 'Guardar';
+        saveBtn.textContent = '✓';
+        saveBtn.style.display = 'none';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'icon-action danger';
+        deleteBtn.title = 'Eliminar';
+        deleteBtn.textContent = '🗑';
+
+        editBtn.addEventListener('click', function () {
+          span.style.display = 'none';
+          editInput.style.display = 'block';
+          editBtn.style.display = 'none';
+          saveBtn.style.display = 'inline-block';
+          editInput.focus();
+        });
+
+        saveBtn.addEventListener('click', function () {
+          const nuevoNombre = editInput.value.trim();
+          if (!nuevoNombre) return;
+          onEdit(item.row, nuevoNombre);
+        });
+
+        deleteBtn.addEventListener('click', function () {
+          if (confirm('¿Eliminar "' + item.nombre + '"? Esta acción no se puede deshacer.')) {
+            onDelete(item.row);
+          }
+        });
+
+        row.appendChild(span);
+        row.appendChild(editInput);
+        row.appendChild(editBtn);
+        row.appendChild(saveBtn);
+        row.appendChild(deleteBtn);
+        container.appendChild(row);
+      });
+    }
+
+    // ---------- Gestores ----------
+    function cargarGestores() {
+      if (!adminAuth) return;
+      apiGet('adminListarGestores', adminAuth)
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          renderCatalogo('listaGestores', resp.data, editarGestor, eliminarGestor);
+        })
+        .catch(handleAuthError);
+    }
+
+    function editarGestor(fila, nuevoNombre) {
+      apiPost('adminEditarGestor', Object.assign({ fila: fila, nombre: nuevoNombre }, adminAuth))
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          renderCatalogo('listaGestores', resp.data, editarGestor, eliminarGestor);
+          showMsg(adminMsgBox, 'success', 'Gestor actualizado.');
+        })
+        .catch(handleAuthError);
+    }
+
+    function eliminarGestor(fila) {
+      apiPost('adminEliminarGestor', Object.assign({ fila: fila }, adminAuth))
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          renderCatalogo('listaGestores', resp.data, editarGestor, eliminarGestor);
+          showMsg(adminMsgBox, 'success', 'Gestor eliminado.');
+        })
+        .catch(handleAuthError);
+    }
+
+    document.getElementById('btnAgregarGestor').addEventListener('click', function () {
+      const input = document.getElementById('nuevoGestor');
+      const nombre = input.value.trim();
+      if (!nombre) return;
+      apiPost('adminAgregarGestor', Object.assign({ nombre: nombre }, adminAuth))
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          renderCatalogo('listaGestores', resp.data, editarGestor, eliminarGestor);
+          input.value = '';
+          showMsg(adminMsgBox, 'success', 'Gestor agregado.');
+        })
+        .catch(handleAuthError);
+    });
+
+    // ---------- Motivos ----------
+    function cargarMotivos() {
+      if (!adminAuth) return;
+      apiGet('adminListarMotivos', adminAuth)
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          renderCatalogo('listaMotivos', resp.data, editarMotivo, eliminarMotivo);
+        })
+        .catch(handleAuthError);
+    }
+
+    function editarMotivo(fila, nuevoNombre) {
+      apiPost('adminEditarMotivo', Object.assign({ fila: fila, nombre: nuevoNombre }, adminAuth))
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          renderCatalogo('listaMotivos', resp.data, editarMotivo, eliminarMotivo);
+          showMsg(adminMsgBox, 'success', 'Motivo actualizado.');
+        })
+        .catch(handleAuthError);
+    }
+
+    function eliminarMotivo(fila) {
+      apiPost('adminEliminarMotivo', Object.assign({ fila: fila }, adminAuth))
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          renderCatalogo('listaMotivos', resp.data, editarMotivo, eliminarMotivo);
+          showMsg(adminMsgBox, 'success', 'Motivo eliminado.');
+        })
+        .catch(handleAuthError);
+    }
+
+    document.getElementById('btnAgregarMotivo').addEventListener('click', function () {
+      const input = document.getElementById('nuevoMotivo');
+      const nombre = input.value.trim();
+      if (!nombre) return;
+      apiPost('adminAgregarMotivo', Object.assign({ nombre: nombre }, adminAuth))
+        .then(function (resp) {
+          if (!resp.ok) throw new Error(resp.error || 'Error desconocido');
+          renderCatalogo('listaMotivos', resp.data, editarMotivo, eliminarMotivo);
+          input.value = '';
+          showMsg(adminMsgBox, 'success', 'Motivo agregado.');
+        })
+        .catch(handleAuthError);
+    });
+  </script>
+</body>
+</html>
