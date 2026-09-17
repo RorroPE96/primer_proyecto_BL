@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanzas Matrimonio</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --text-muted: #9a9990;
+  --border: #e5e4df;
+  --accent: #2a78d6;
+  --accent-light: #e8f0fc;
+  --green: #1baf7a;
+  --green-light: #e6f7f1;
+  --red: #d94040;
+  --red-light: #fce8e8;
+  --orange: #eb6834;
+  --yellow: #eda100;
+  --cat-1: #2a78d6;
+  --cat-2: #eb6834;
+  --cat-3: #1baf7a;
+  --cat-4: #eda100;
+  --cat-5: #e87ba4;
+  --cat-6: #008300;
+  --cat-7: #4a3aa7;
+  --cat-8: #c45200;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ---- LOGIN ---- */
+.login-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 16px;
+}
+.login-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+.login-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.login-card p { color: var(--text-2); font-size: 14px; margin-bottom: 28px; }
+.login-card input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+.login-card input:focus { border-color: var(--accent); }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .2s;
+  width: 100%;
+}
+.btn:hover { opacity: .9; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-danger { background: var(--red); color: #fff; font-size: 13px; padding: 8px 14px; }
+.btn-sm { padding: 8px 16px; font-size: 13px; width: auto; }
+.error-msg { color: var(--red); font-size: 13px; margin-top: 8px; }
+
+/* ---- LAYOUT ---- */
+.app { display: none; }
+.app.active { display: block; }
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar h2 { font-size: 17px; font-weight: 700; }
+.topbar .user-badge {
+  font-size: 13px;
+  color: var(--text-2);
+  background: var(--bg);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.logout-btn {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-2);
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 8px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  white-space: nowrap;
+  transition: color .2s, border-color .2s;
+}
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.container { max-width: 900px; margin: 0 auto; padding: 16px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+
+/* STAT TILES */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.stat-tile {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  text-align: center;
+}
+.stat-tile .label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.stat-tile .value { font-size: 26px; font-weight: 700; }
+.stat-tile.income .value { color: var(--green); }
+.stat-tile.expense .value { color: var(--red); }
+.stat-tile.balance .value { color: var(--accent); }
+.stat-tile.loan .value { color: var(--orange); }
+
+/* FORMS */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+.form-group { display: flex; flex-direction: column; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 5px; }
+.form-group input, .form-group select, .form-group textarea {
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+.form-actions { grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 4px; }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; margin-top: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 8px; border-bottom: 2px solid var(--border); color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; }
+td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: var(--bg); }
+
+/* CHARTS */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 600px) { .chart-grid { grid-template-columns: 1fr; } }
+.chart-box { position: relative; }
+.chart-box canvas { width: 100% !important; max-height: 280px; }
+
+/* MONTH SELECTOR */
+.month-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.month-selector select, .month-selector input {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+.month-selector .btn { width: auto; }
+
+/* LOADING */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.spinner {
+  width: 20px; height: 20px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  margin-right: 10px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 999;
+  animation: fadeUp .3s;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } }
+
+.badge-ahorro { background: var(--green-light); color: var(--green); padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 14px; }
+.badge-deficit { background: var(--red-light); color: var(--red); padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <h1>Finanzas Matrimonio</h1>
+    <p>Administra tus finanzas en pareja</p>
+    <input type="text" id="loginUser" placeholder="Usuario" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password">
+    <button class="btn btn-primary" onclick="doLogin()">Ingresar</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div class="app" id="appScreen">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>Finanzas</h2>
+      <span class="user-badge" id="userBadge"></span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Salir</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="ingresos">Ingresos</button>
+    <button class="tab-btn" data-tab="gastos">Gastos</button>
+    <button class="tab-btn" data-tab="prestamos">Préstamos</button>
+  </div>
+
+  <div class="container">
+
+    <!-- ======= DASHBOARD ======= -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="month-selector">
+        <select id="dashMes">
+          <option value="1">Enero</option><option value="2">Febrero</option>
+          <option value="3">Marzo</option><option value="4">Abril</option>
+          <option value="5">Mayo</option><option value="6">Junio</option>
+          <option value="7">Julio</option><option value="8">Agosto</option>
+          <option value="9">Septiembre</option><option value="10">Octubre</option>
+          <option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+        <input type="number" id="dashAnio" value="2026" min="2024" max="2030" style="width:90px">
+        <button class="btn btn-primary btn-sm" onclick="loadDashboard()">Ver</button>
+      </div>
+
+      <div class="stats-row" id="statsRow">
+        <div class="stat-tile income"><div class="label">Ingresos</div><div class="value" id="statIngresos">-</div></div>
+        <div class="stat-tile expense"><div class="label">Gastos</div><div class="value" id="statGastos">-</div></div>
+        <div class="stat-tile balance"><div class="label">Balance</div><div class="value" id="statBalance">-</div></div>
+        <div class="stat-tile loan"><div class="label">Préstamos Dados</div><div class="value" id="statPO">-</div></div>
+      </div>
+
+      <div id="estadoBadge" style="text-align:center;margin-bottom:16px"></div>
+
+      <div class="chart-grid">
+        <div class="card">
+          <h3>Gastos por Categoría</h3>
+          <div class="chart-box"><canvas id="chartGastosCat"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Ingresos por Categoría</h3>
+          <div class="chart-box"><canvas id="chartIngresosCat"></canvas></div>
+        </div>
+        <div class="card" style="grid-column: 1 / -1;">
+          <h3>Gastos Diarios del Mes</h3>
+          <div class="chart-box"><canvas id="chartGastosDiarios"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= INGRESOS ======= -->
+    <div class="tab-content" id="tab-ingresos">
+      <div class="card">
+        <h3>Registrar Ingreso</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha y Hora</label>
+            <input type="datetime-local" id="ingFecha">
+          </div>
+          <div class="form-group">
+            <label>Categoría</label>
+            <select id="ingCategoria"><option value="">Cargando...</option></select>
+          </div>
+          <div class="form-group">
+            <label>Monto</label>
+            <input type="number" id="ingMonto" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label>Moneda</label>
+            <select id="ingMoneda"><option value="PEN">PEN (S/)</option><option value="USD">USD ($)</option></select>
+          </div>
+          <div class="form-group">
+            <label>Medio</label>
+            <select id="ingMedio">
+              <option value="Efectivo">Efectivo</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Yape">Yape</option>
+              <option value="Plin">Plin</option>
+              <option value="Depósito">Depósito</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notas</label>
+            <input type="text" id="ingNotas" placeholder="Opcional">
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-success btn-sm" onclick="registrarIngreso()">Guardar Ingreso</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Historial de Ingresos</h3>
+        <div class="month-selector">
+          <select id="ingMesFiltro">
+            <option value="">Todos</option>
+            <option value="1">Enero</option><option value="2">Febrero</option>
+            <option value="3">Marzo</option><option value="4">Abril</option>
+            <option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option>
+            <option value="9">Septiembre</option><option value="10">Octubre</option>
+            <option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+          <input type="number" id="ingAnioFiltro" value="2026" min="2024" max="2030" style="width:90px">
+          <button class="btn btn-primary btn-sm" onclick="loadIngresos()">Buscar</button>
+        </div>
+        <div class="table-wrap" id="tablaIngresos"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+      </div>
+    </div>
+
+    <!-- ======= GASTOS ======= -->
+    <div class="tab-content" id="tab-gastos">
+      <div class="card">
+        <h3>Registrar Gasto</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha y Hora</label>
+            <input type="datetime-local" id="gasFecha">
+          </div>
+          <div class="form-group">
+            <label>Categoría</label>
+            <select id="gasCategoria"><option value="">Cargando...</option></select>
+          </div>
+          <div class="form-group">
+            <label>Monto</label>
+            <input type="number" id="gasMonto" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label>Moneda</label>
+            <select id="gasMoneda"><option value="PEN">PEN (S/)</option><option value="USD">USD ($)</option></select>
+          </div>
+          <div class="form-group">
+            <label>Medio</label>
+            <select id="gasMedio">
+              <option value="Efectivo">Efectivo</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Yape">Yape</option>
+              <option value="Plin">Plin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Método de Pago</label>
+            <select id="gasMetodo">
+              <option value="Contado">Contado</option>
+              <option value="Tarjeta Crédito">Tarjeta Crédito</option>
+              <option value="Tarjeta Débito">Tarjeta Débito</option>
+              <option value="Cuotas">Cuotas</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Notas</label>
+            <input type="text" id="gasNotas" placeholder="Opcional">
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-success btn-sm" onclick="registrarGasto()">Guardar Gasto</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Historial de Gastos</h3>
+        <div class="month-selector">
+          <select id="gasMesFiltro">
+            <option value="">Todos</option>
+            <option value="1">Enero</option><option value="2">Febrero</option>
+            <option value="3">Marzo</option><option value="4">Abril</option>
+            <option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option>
+            <option value="9">Septiembre</option><option value="10">Octubre</option>
+            <option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+          <input type="number" id="gasAnioFiltro" value="2026" min="2024" max="2030" style="width:90px">
+          <button class="btn btn-primary btn-sm" onclick="loadGastos()">Buscar</button>
+        </div>
+        <div class="table-wrap" id="tablaGastos"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+      </div>
+    </div>
+
+    <!-- ======= PRÉSTAMOS ======= -->
+    <div class="tab-content" id="tab-prestamos">
+      <div class="card">
+        <h3>Registrar Préstamo Otorgado (Presté a alguien)</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha y Hora del Préstamo</label>
+            <input type="datetime-local" id="poFecha">
+          </div>
+          <div class="form-group">
+            <label>A quién le presté</label>
+            <input type="text" id="poPersona" placeholder="Nombre de la persona">
+          </div>
+          <div class="form-group">
+            <label>Monto</label>
+            <input type="number" id="poMonto" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label>Fecha estimada de devolución</label>
+            <input type="date" id="poFechaD">
+          </div>
+          <div class="form-group">
+            <label>Moneda</label>
+            <select id="poMoneda"><option value="PEN">PEN (S/)</option><option value="USD">USD ($)</option></select>
+          </div>
+          <div class="form-group">
+            <label>Método de Pago</label>
+            <select id="poMetodo">
+              <option value="Efectivo">Efectivo</option>
+              <option value="Yape">Yape</option>
+              <option value="Transferencia">Transferencia</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Notas</label>
+            <input type="text" id="poNotas" placeholder="Opcional">
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-success btn-sm" onclick="registrarPO()">Guardar Préstamo Otorgado</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Registrar Préstamo Recibido (Me prestaron)</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha y Hora que recibí</label>
+            <input type="datetime-local" id="prFecha">
+          </div>
+          <div class="form-group">
+            <label>Monto</label>
+            <input type="number" id="prMonto" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label>Fecha estimada de pago</label>
+            <input type="date" id="prFechaE">
+          </div>
+          <div class="form-group">
+            <label>Moneda</label>
+            <select id="prMoneda"><option value="PEN">PEN (S/)</option><option value="USD">USD ($)</option></select>
+          </div>
+          <div class="form-group">
+            <label>Método de Pago</label>
+            <select id="prMetodo">
+              <option value="Efectivo">Efectivo</option>
+              <option value="Yape">Yape</option>
+              <option value="Transferencia">Transferencia</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Notas</label>
+            <input type="text" id="prNotas" placeholder="Opcional">
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-success btn-sm" onclick="registrarPR()">Guardar Préstamo Recibido</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Préstamos Otorgados</h3>
+        <div class="table-wrap" id="tablaPO"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+      </div>
+      <div class="card">
+        <h3>Préstamos Recibidos</h3>
+        <div class="table-wrap" id="tablaPR"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN - PEGA AQUÍ TU URL DE APPS SCRIPT
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbwRvoewni_XeqJecRy0H2WeCFVu6E8Xs1Wm5MbiNTR8kRfbcm8DYAkJvTLbMxwCcd1rmw/exec';
+
+// ---- STATE ----
+let currentUser = null;
+let chartGastosCat = null;
+let chartIngresosCat = null;
+let chartGastosDiarios = null;
+
+const catColors = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#c45200'];
+
+// ---- API CALL ----
+async function api(params) {
+  const url = new URL(API_URL);
+  Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
+  const res = await fetch(url.toString());
+  return await res.json();
+}
+
+// ---- LOGIN ----
+async function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!user || !pass) { document.getElementById('loginError').textContent = 'Completa ambos campos'; return; }
+
+  try {
+    const res = await api({ action: 'login', usuario: user, password: pass });
+    if (res.success) {
+      currentUser = res;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appScreen').classList.add('active');
+      document.getElementById('userBadge').textContent = res.nombre.split(' ').slice(0,2).join(' ') + ' (' + res.rol + ')';
+      initApp();
+    } else {
+      document.getElementById('loginError').textContent = res.error;
+    }
+  } catch(e) {
+    document.getElementById('loginError').textContent = 'Error de conexión. Verifica la URL del API.';
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+// ---- TABS ----
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---- INIT ----
+function initApp() {
+  const now = new Date();
+  document.getElementById('dashMes').value = now.getMonth() + 1;
+  document.getElementById('ingFecha').value = today();
+  document.getElementById('gasFecha').value = today();
+  document.getElementById('poFecha').value = today();
+  document.getElementById('prFecha').value = today();
+
+  loadCategorias();
+  loadDashboard();
+}
+
+function today() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
+    + 'T' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+function fmtMoney(n) {
+  return 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtDate(d) {
+  if (!d) return '-';
+  const dt = new Date(d);
+  return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear()
+    + ' ' + String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0');
+}
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ---- CATEGORÍAS ----
+async function loadCategorias() {
+  try {
+    const ingRes = await api({ action: 'getCategorias', tabla: 'Ingreso' });
+    if (ingRes.success) {
+      const sel = document.getElementById('ingCategoria');
+      sel.innerHTML = ingRes.categorias.map(c => `<option value="${c.categoria}">${c.categoria} (${c.tipo})</option>`).join('');
+    }
+
+    const gasRes = await api({ action: 'getCategorias', tabla: 'Gasto' });
+    if (gasRes.success) {
+      const sel = document.getElementById('gasCategoria');
+      sel.innerHTML = gasRes.categorias.map(c => `<option value="${c.categoria}">${c.categoria}</option>`).join('');
+    }
+  } catch(e) { console.error('Error cargando categorías', e); }
+}
+
+// ---- DASHBOARD ----
+async function loadDashboard() {
+  const mes = document.getElementById('dashMes').value;
+  const anio = document.getElementById('dashAnio').value;
+
+  try {
+    const res = await api({ action: 'getResumenMensual', mes, anio });
+    if (!res.success) return;
+
+    document.getElementById('statIngresos').textContent = fmtMoney(res.totalIngresos);
+    document.getElementById('statGastos').textContent = fmtMoney(res.totalGastos);
+    document.getElementById('statBalance').textContent = fmtMoney(res.balance);
+    document.getElementById('statPO').textContent = fmtMoney(res.totalPrestamosOtorgados);
+
+    const badge = document.getElementById('estadoBadge');
+    if (res.totalIngresos === 0 && res.totalGastos === 0) {
+      badge.innerHTML = '<span style="color:var(--text-muted)">Sin movimientos este mes</span>';
+    } else {
+      badge.innerHTML = res.estado === 'AHORRO'
+        ? '<span class="badge-ahorro">AHORRO: ' + fmtMoney(res.balance) + '</span>'
+        : '<span class="badge-deficit">DÉFICIT: ' + fmtMoney(Math.abs(res.balance)) + '</span>';
+    }
+
+    // Gastos por categoría - horizontal bar
+    const gasCats = Object.keys(res.gastosPorCategoria);
+    const gasVals = Object.values(res.gastosPorCategoria);
+
+    if (chartGastosCat) chartGastosCat.destroy();
+    chartGastosCat = new Chart(document.getElementById('chartGastosCat'), {
+      type: 'bar',
+      data: {
+        labels: gasCats,
+        datasets: [{
+          data: gasVals,
+          backgroundColor: gasCats.map((_, i) => catColors[i % catColors.length]),
+          borderRadius: 4,
+          barThickness: 24
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: ctx => fmtMoney(ctx.raw) }
+          }
+        },
+        scales: {
+          x: { grid: { color: '#e5e4df' }, ticks: { callback: v => 'S/ ' + v } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+
+    // Ingresos por categoría - doughnut
+    const ingCats = Object.keys(res.ingresosPorCategoria);
+    const ingVals = Object.values(res.ingresosPorCategoria);
+
+    if (chartIngresosCat) chartIngresosCat.destroy();
+    chartIngresosCat = new Chart(document.getElementById('chartIngresosCat'), {
+      type: 'doughnut',
+      data: {
+        labels: ingCats,
+        datasets: [{
+          data: ingVals,
+          backgroundColor: ingCats.map((_, i) => catColors[i % catColors.length]),
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          spacing: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '55%',
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 12 } } },
+          tooltip: {
+            callbacks: { label: ctx => ctx.label + ': ' + fmtMoney(ctx.raw) }
+          }
+        }
+      }
+    });
+
+    // Gastos diarios - line
+    const dias = Object.keys(res.gastosDiarios).map(Number).sort((a,b) => a - b);
+    const diasVals = dias.map(d => res.gastosDiarios[d]);
+
+    if (chartGastosDiarios) chartGastosDiarios.destroy();
+    chartGastosDiarios = new Chart(document.getElementById('chartGastosDiarios'), {
+      type: 'line',
+      data: {
+        labels: dias.map(d => d + ''),
+        datasets: [{
+          label: 'Gasto diario',
+          data: diasVals,
+          borderColor: '#2a78d6',
+          backgroundColor: 'rgba(42,120,214,0.08)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#2a78d6',
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: ctx => 'Día ' + ctx.label + ': ' + fmtMoney(ctx.raw) }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, title: { display: true, text: 'Día del mes', font: { size: 12 } } },
+          y: { grid: { color: '#e5e4df' }, ticks: { callback: v => 'S/ ' + v } }
+        }
+      }
+    });
+
+  } catch(e) { console.error('Error dashboard', e); }
+}
+
+// ---- REGISTRAR INGRESO ----
+async function registrarIngreso() {
+  const data = {
+    fecha: document.getElementById('ingFecha').value,
+    usuario: currentUser.usuario,
+    categoria: document.getElementById('ingCategoria').value,
+    monto: document.getElementById('ingMonto').value,
+    moneda: document.getElementById('ingMoneda').value,
+    medio: document.getElementById('ingMedio').value,
+    notas: document.getElementById('ingNotas').value
+  };
+  if (!data.fecha || !data.monto || !data.categoria) { toast('Completa fecha, categoría y monto'); return; }
+
+  const res = await api({ action: 'registrarIngreso', data: JSON.stringify(data) });
+  if (res.success) {
+    toast('Ingreso registrado');
+    document.getElementById('ingMonto').value = '';
+    document.getElementById('ingNotas').value = '';
+    loadDashboard();
+  } else { toast('Error: ' + res.error); }
+}
+
+// ---- REGISTRAR GASTO ----
+async function registrarGasto() {
+  const data = {
+    fecha: document.getElementById('gasFecha').value,
+    usuario: currentUser.usuario,
+    categoria: document.getElementById('gasCategoria').value,
+    monto: document.getElementById('gasMonto').value,
+    moneda: document.getElementById('gasMoneda').value,
+    medio: document.getElementById('gasMedio').value,
+    metodoPago: document.getElementById('gasMetodo').value,
+    notas: document.getElementById('gasNotas').value
+  };
+  if (!data.fecha || !data.monto || !data.categoria) { toast('Completa fecha, categoría y monto'); return; }
+
+  const res = await api({ action: 'registrarGasto', data: JSON.stringify(data) });
+  if (res.success) {
+    toast('Gasto registrado');
+    document.getElementById('gasMonto').value = '';
+    document.getElementById('gasNotas').value = '';
+    loadDashboard();
+  } else { toast('Error: ' + res.error); }
+}
+
+// ---- REGISTRAR PRÉSTAMOS ----
+async function registrarPO() {
+  const data = {
+    fechaOtorgado: document.getElementById('poFecha').value,
+    usuario: currentUser.usuario,
+    personaOtorgada: document.getElementById('poPersona').value,
+    monto: document.getElementById('poMonto').value,
+    fechaDevolucion: document.getElementById('poFechaD').value,
+    moneda: document.getElementById('poMoneda').value,
+    metodoPago: document.getElementById('poMetodo').value,
+    notas: document.getElementById('poNotas').value
+  };
+  if (!data.fechaOtorgado || !data.monto || !data.personaOtorgada) { toast('Completa fecha, persona y monto'); return; }
+
+  const res = await api({ action: 'registrarPrestamoOtorgado', data: JSON.stringify(data) });
+  if (res.success) {
+    toast('Préstamo otorgado registrado');
+    document.getElementById('poMonto').value = '';
+    document.getElementById('poPersona').value = '';
+    document.getElementById('poNotas').value = '';
+    loadPrestamos();
+  } else { toast('Error: ' + res.error); }
+}
+
+async function registrarPR() {
+  const data = {
+    fechaRecibido: document.getElementById('prFecha').value,
+    usuario: currentUser.usuario,
+    monto: document.getElementById('prMonto').value,
+    fechaEstimada: document.getElementById('prFechaE').value,
+    moneda: document.getElementById('prMoneda').value,
+    metodoPago: document.getElementById('prMetodo').value,
+    notas: document.getElementById('prNotas').value
+  };
+  if (!data.fechaRecibido || !data.monto) { toast('Completa fecha y monto'); return; }
+
+  const res = await api({ action: 'registrarPrestamoRecibido', data: JSON.stringify(data) });
+  if (res.success) {
+    toast('Préstamo recibido registrado');
+    document.getElementById('prMonto').value = '';
+    document.getElementById('prNotas').value = '';
+    loadPrestamos();
+  } else { toast('Error: ' + res.error); }
+}
+
+// ---- LOAD TABLES ----
+async function loadIngresos() {
+  const mes = document.getElementById('ingMesFiltro').value;
+  const anio = document.getElementById('ingAnioFiltro').value;
+  const container = document.getElementById('tablaIngresos');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando...</div>';
+
+  const res = await api({ action: 'getMovimientos', tipo: 'ingresos', mes, anio });
+  if (!res.success || !res.movimientos.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);padding:12px">Sin ingresos encontrados</p>';
+    return;
+  }
+
+  let html = '<table><thead><tr><th>Fecha</th><th>Categoría</th><th>Monto</th><th>Medio</th><th>Notas</th><th></th></tr></thead><tbody>';
+  res.movimientos.forEach(m => {
+    html += `<tr>
+      <td>${fmtDate(m.Fecha_Ingreso)}</td>
+      <td>${m['Categoría'] || ''}</td>
+      <td><strong>${fmtMoney(m.Sueldo)}</strong></td>
+      <td>${m.Medio || ''}</td>
+      <td>${m.Notas || ''}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="eliminar('ingresos',${m.ID})">Eliminar</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+async function loadGastos() {
+  const mes = document.getElementById('gasMesFiltro').value;
+  const anio = document.getElementById('gasAnioFiltro').value;
+  const container = document.getElementById('tablaGastos');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando...</div>';
+
+  const res = await api({ action: 'getMovimientos', tipo: 'gastos', mes, anio });
+  if (!res.success || !res.movimientos.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);padding:12px">Sin gastos encontrados</p>';
+    return;
+  }
+
+  let html = '<table><thead><tr><th>Fecha</th><th>Categoría</th><th>Monto</th><th>Método</th><th>Notas</th><th></th></tr></thead><tbody>';
+  res.movimientos.forEach(m => {
+    html += `<tr>
+      <td>${fmtDate(m.Fecha_Gasto)}</td>
+      <td>${m['Categoría'] || ''}</td>
+      <td><strong>${fmtMoney(m.Sueldo)}</strong></td>
+      <td>${m.Metodo_Pago || ''}</td>
+      <td>${m.Notas || ''}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="eliminar('gastos',${m.ID})">Eliminar</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+async function loadPrestamos() {
+  // Otorgados
+  const resPO = await api({ action: 'getMovimientos', tipo: 'prestamosOtorgados' });
+  const contPO = document.getElementById('tablaPO');
+  if (!resPO.success || !resPO.movimientos.length) {
+    contPO.innerHTML = '<p style="color:var(--text-muted);padding:12px">Sin préstamos otorgados</p>';
+  } else {
+    let html = '<table><thead><tr><th>Fecha</th><th>Persona</th><th>Monto</th><th>Devolución</th><th>Notas</th><th></th></tr></thead><tbody>';
+    resPO.movimientos.forEach(m => {
+      html += `<tr>
+        <td>${fmtDate(m.Fecha_PO)}</td>
+        <td>${m.Persona_Otorgada || ''}</td>
+        <td><strong>${fmtMoney(m.Medio)}</strong></td>
+        <td>${fmtDate(m.Fecha_PD)}</td>
+        <td>${m.Notas || ''}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="eliminar('prestamosOtorgados',${m.ID})">Eliminar</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    contPO.innerHTML = html;
+  }
+
+  // Recibidos
+  const resPR = await api({ action: 'getMovimientos', tipo: 'prestamosRecibidos' });
+  const contPR = document.getElementById('tablaPR');
+  if (!resPR.success || !resPR.movimientos.length) {
+    contPR.innerHTML = '<p style="color:var(--text-muted);padding:12px">Sin préstamos recibidos</p>';
+  } else {
+    let html = '<table><thead><tr><th>Fecha</th><th>Monto</th><th>Pago Estimado</th><th>Método</th><th>Notas</th><th></th></tr></thead><tbody>';
+    resPR.movimientos.forEach(m => {
+      html += `<tr>
+        <td>${fmtDate(m.Fecha_PO)}</td>
+        <td><strong>${fmtMoney(m.Medio)}</strong></td>
+        <td>${fmtDate(m.Fecha_PE)}</td>
+        <td>${m.Metodo_Pago || ''}</td>
+        <td>${m.Notas || ''}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="eliminar('prestamosRecibidos',${m.ID})">Eliminar</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    contPR.innerHTML = html;
+  }
+}
+
+async function eliminar(tipo, id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  const res = await api({ action: 'eliminarRegistro', tipo, id });
+  if (res.success) {
+    toast('Registro eliminado');
+    loadDashboard();
+    if (tipo === 'ingresos') loadIngresos();
+    else if (tipo === 'gastos') loadGastos();
+    else loadPrestamos();
+  } else { toast('Error: ' + res.error); }
+}
+
+// Enter key on login
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
